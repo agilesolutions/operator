@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/operator-framework/operator-sdk-samples/go/memcached-operator/pkg/apis/cache/v1alpha1"
+	"github.com/agilesolutions/operator/apis/keycloak/v1alpha1"
 )
 
 func init() {

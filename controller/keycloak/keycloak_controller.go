@@ -1,10 +1,10 @@
-package memcached
+package keycloak
 
 import (
 	"context"
 	"reflect"
 
-	cachev1alpha1 "github.com/operator/apis/cache/v1alpha1"
+	keycloakv1alpha1 "github.com/operator/apis/keycloak/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -22,9 +22,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_memcached")
+var log = logf.Log.WithName("controller_keycloak")
 
-// Add creates a new Memcached Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new Keycloak Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -32,28 +32,28 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileMemcached{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileKeycloak{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("memcached-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("keycloak-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource Memcached
-	err = c.Watch(&source.Kind{Type: &cachev1alpha1.Memcached{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource Keycloak
+	err = c.Watch(&source.Kind{Type: &keycloakv1alpha1.Keycloak{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Memcached
+	// Watch for changes to secondary resource Pods and requeue the owner Keycloak
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &cachev1alpha1.Memcached{},
+		OwnerType:    &keycloakv1alpha1.Keycloak{},
 	})
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &cachev1alpha1.Memcached{},
+		OwnerType:    &keycloakv1alpha1.Keycloak{},
 	})
 	if err != nil {
 		return err
@@ -70,10 +70,10 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileMemcached{}
+var _ reconcile.Reconciler = &ReconcileKeycloak{}
 
-// ReconcileMemcached reconciles a Memcached object
-type ReconcileMemcached struct {
+// ReconcileKeycloak reconciles a Keycloak object
+type ReconcileKeycloak struct {
 	// TODO: Clarify the split client
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
@@ -81,39 +81,39 @@ type ReconcileMemcached struct {
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a Memcached object and makes changes based on the state read
-// and what is in the Memcached.Spec
+// Reconcile reads that state of the cluster for a Keycloak object and makes changes based on the state read
+// and what is in the Keycloak.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Memcached Deployment for each Memcached CR
+// a Keycloak Deployment for each Keycloak CR
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileKeycloak) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Memcached.")
+	reqLogger.Info("Reconciling Keycloak.")
 
-	// Fetch the Memcached instance
-	memcached := &cachev1alpha1.Memcached{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, memcached)
+	// Fetch the Keycloak instance
+	keycloak := &keycloakv1alpha1.Keycloak{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, keycloak)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("Memcached resource not found. Ignoring since object must be deleted.")
+			reqLogger.Info("Keycloak resource not found. Ignoring since object must be deleted.")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		reqLogger.Error(err, "Failed to get Memcached.")
+		reqLogger.Error(err, "Failed to get Keycloak.")
 		return reconcile.Result{}, err
 	}
 
 	// Check if the Deployment already exists, if not create a new one
 	deployment := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: memcached.Name, Namespace: memcached.Namespace}, deployment)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: keycloak.Name, Namespace: keycloak.Namespace}, deployment)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new Deployment
-		dep := r.deploymentForMemcached(memcached)
+		dep := r.deploymentForKeycloak(keycloak)
 		reqLogger.Info("Creating a new Deployment.", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
 		err = r.client.Create(context.TODO(), dep)
 		if err != nil {
@@ -130,7 +130,7 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// Ensure the deployment size is the same as the spec
-	size := memcached.Spec.Size
+	size := keycloak.Spec.Size
 	if *deployment.Spec.Replicas != size {
 		deployment.Spec.Replicas = &size
 		err = r.client.Update(context.TODO(), deployment)
@@ -141,12 +141,12 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// Check if the Service already exists, if not create a new one
-	// NOTE: The Service is used to expose the Deployment. However, the Service is not required at all for the memcached example to work. The purpose is to add more examples of what you can do in your operator project.
+	// NOTE: The Service is used to expose the Deployment. However, the Service is not required at all for the keycloak example to work. The purpose is to add more examples of what you can do in your operator project.
 	service := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: memcached.Name, Namespace: memcached.Namespace}, service)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: keycloak.Name, Namespace: keycloak.Namespace}, service)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new Service object
-		ser := r.serviceForMemcached(memcached)
+		ser := r.serviceForKeycloak(keycloak)
 		reqLogger.Info("Creating a new Service.", "Service.Namespace", ser.Namespace, "Service.Name", ser.Name)
 		err = r.client.Create(context.TODO(), ser)
 		if err != nil {
@@ -158,26 +158,26 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	// Update the Memcached status with the pod names
-	// List the pods for this memcached's deployment
+	// Update the Keycloak status with the pod names
+	// List the pods for this keycloak's deployment
 	podList := &corev1.PodList{}
 	listOpts := []client.ListOption{
-		client.InNamespace(memcached.Namespace),
-		client.MatchingLabels(labelsForMemcached(memcached.Name)),
+		client.InNamespace(keycloak.Namespace),
+		client.MatchingLabels(labelsForKeycloak(keycloak.Name)),
 	}
 	err = r.client.List(context.TODO(), podList, listOpts...)
 	if err != nil {
-		reqLogger.Error(err, "Failed to list pods.", "Memcached.Namespace", memcached.Namespace, "Memcached.Name", memcached.Name)
+		reqLogger.Error(err, "Failed to list pods.", "Keycloak.Namespace", keycloak.Namespace, "Keycloak.Name", keycloak.Name)
 		return reconcile.Result{}, err
 	}
 	podNames := getPodNames(podList.Items)
 
 	// Update status.Nodes if needed
-	if !reflect.DeepEqual(podNames, memcached.Status.Nodes) {
-		memcached.Status.Nodes = podNames
-		err := r.client.Status().Update(context.TODO(), memcached)
+	if !reflect.DeepEqual(podNames, keycloak.Status.Nodes) {
+		keycloak.Status.Nodes = podNames
+		err := r.client.Status().Update(context.TODO(), keycloak)
 		if err != nil {
-			reqLogger.Error(err, "Failed to update Memcached status.")
+			reqLogger.Error(err, "Failed to update Keycloak status.")
 			return reconcile.Result{}, err
 		}
 	}
@@ -185,9 +185,9 @@ func (r *ReconcileMemcached) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-// deploymentForMemcached returns a memcached Deployment object
-func (r *ReconcileMemcached) deploymentForMemcached(m *cachev1alpha1.Memcached) *appsv1.Deployment {
-	ls := labelsForMemcached(m.Name)
+// deploymentForKeycloak returns a keycloak Deployment object
+func (r *ReconcileKeycloak) deploymentForKeycloak(m *keycloakv1alpha1.Keycloak) *appsv1.Deployment {
+	ls := labelsForKeycloak(m.Name)
 	replicas := m.Spec.Size
 
 	dep := &appsv1.Deployment{
@@ -206,26 +206,26 @@ func (r *ReconcileMemcached) deploymentForMemcached(m *cachev1alpha1.Memcached) 
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Image:   "memcached:1.4.36-alpine",
-						Name:    "memcached",
-						Command: []string{"memcached", "-m=64", "-o", "modern", "-v"},
+						Image:   "keycloak:1.4.36-alpine",
+						Name:    "keycloak",
+						Command: []string{"keycloak", "-m=64", "-o", "modern", "-v"},
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 11211,
-							Name:          "memcached",
+							Name:          "keycloak",
 						}},
 					}},
 				},
 			},
 		},
 	}
-	// Set Memcached instance as the owner of the Deployment.
+	// Set Keycloak instance as the owner of the Deployment.
 	controllerutil.SetControllerReference(m, dep, r.scheme)
 	return dep
 }
 
-// serviceForMemcached function takes in a Memcached object and returns a Service for that object.
-func (r *ReconcileMemcached) serviceForMemcached(m *cachev1alpha1.Memcached) *corev1.Service {
-	ls := labelsForMemcached(m.Name)
+// serviceForKeycloak function takes in a Keycloak object and returns a Service for that object.
+func (r *ReconcileKeycloak) serviceForKeycloak(m *keycloakv1alpha1.Keycloak) *corev1.Service {
+	ls := labelsForKeycloak(m.Name)
 	ser := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      m.Name,
@@ -241,15 +241,15 @@ func (r *ReconcileMemcached) serviceForMemcached(m *cachev1alpha1.Memcached) *co
 			},
 		},
 	}
-	// Set Memcached instance as the owner of the Service.
+	// Set Keycloak instance as the owner of the Service.
 	controllerutil.SetControllerReference(m, ser, r.scheme)
 	return ser
 }
 
-// labelsForMemcached returns the labels for selecting the resources
-// belonging to the given memcached CR name.
-func labelsForMemcached(name string) map[string]string {
-	return map[string]string{"app": "memcached", "memcached_cr": name}
+// labelsForKeycloak returns the labels for selecting the resources
+// belonging to the given keycloak CR name.
+func labelsForKeycloak(name string) map[string]string {
+	return map[string]string{"app": "keycloak", "keycloak_cr": name}
 }
 
 // getPodNames returns the pod names of the array of pods passed in

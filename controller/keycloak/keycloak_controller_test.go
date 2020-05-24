@@ -1,4 +1,4 @@
-package memcached
+package keycloak
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	cachev1alpha1 "github.com/agilesolutions/operator/apis/cache/v1alpha1"
+	keycloakv1alpha1 "github.com/agilesolutions/operator/apis/keycloak/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -20,40 +20,40 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-// TestMemcachedController runs ReconcileMemcached.Reconcile() against a
-// fake client that tracks a Memcached object.
-func TestMemcachedController(t *testing.T) {
+// TestKeycloakController runs ReconcileKeycloak.Reconcile() against a
+// fake client that tracks a Keycloak object.
+func TestKeycloakController(t *testing.T) {
 	// Set the logger to development mode for verbose logs.
 	logf.SetLogger(logf.ZapLogger(true))
 
 	var (
-		name            = "memcached-operator"
-		namespace       = "memcached"
+		name            = "keycloak-operator"
+		namespace       = "keycloak"
 		replicas  int32 = 3
 	)
 
-	// A Memcached resource with metadata and spec.
-	memcached := &cachev1alpha1.Memcached{
+	// A Keycloak resource with metadata and spec.
+	keycloak := &keycloakv1alpha1.Keycloak{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: cachev1alpha1.MemcachedSpec{
-			Size: replicas, // Set desired number of Memcached replicas.
+		Spec: keycloakv1alpha1.KeycloakSpec{
+			Size: replicas, // Set desired number of Keycloak replicas.
 		},
 	}
 	// Objects to track in the fake client.
 	objs := []runtime.Object{
-		memcached,
+		keycloak,
 	}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(cachev1alpha1.SchemeGroupVersion, memcached)
+	s.AddKnownTypes(keycloakv1alpha1.SchemeGroupVersion, keycloak)
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
-	// Create a ReconcileMemcached object with the scheme and fake client.
-	r := &ReconcileMemcached{client: cl, scheme: s}
+	// Create a ReconcileKeycloak object with the scheme and fake client.
+	r := &ReconcileKeycloak{client: cl, scheme: s}
 
 	// Mock request to simulate Reconcile() being called on an event for a
 	// watched resource .
@@ -101,7 +101,7 @@ func TestMemcachedController(t *testing.T) {
 
 	// Create the 3 expected pods in namespace and collect their names to check
 	// later.
-	podLabels := labelsForMemcached(name)
+	podLabels := labelsForKeycloak(name)
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -117,7 +117,7 @@ func TestMemcachedController(t *testing.T) {
 		}
 	}
 
-	// Reconcile again so Reconcile() checks pods and updates the Memcached
+	// Reconcile again so Reconcile() checks pods and updates the Keycloak
 	// resources' Status.
 	res, err = r.Reconcile(req)
 	if err != nil {
@@ -127,15 +127,15 @@ func TestMemcachedController(t *testing.T) {
 		t.Error("reconcile did not return an empty Result")
 	}
 
-	// Get the updated Memcached object.
-	memcached = &cachev1alpha1.Memcached{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, memcached)
+	// Get the updated Keycloak object.
+	keycloak = &keycloakv1alpha1.Keycloak{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, keycloak)
 	if err != nil {
-		t.Errorf("get memcached: (%v)", err)
+		t.Errorf("get keycloak: (%v)", err)
 	}
 
-	// Ensure Reconcile() updated the Memcached's Status as expected.
-	nodes := memcached.Status.Nodes
+	// Ensure Reconcile() updated the Keycloak's Status as expected.
+	nodes := keycloak.Status.Nodes
 	if !reflect.DeepEqual(podNames, nodes) {
 		t.Errorf("pod names %v did not match expected %v", nodes, podNames)
 	}
