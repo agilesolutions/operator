@@ -10,12 +10,16 @@ import (
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
-
-	"github.com/agilesolutions/operator/pkg/apis"
-	"github.com/agilesolutions/operator/pkg/controller"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"github.com/agilesolutions/operator/apis"
+	"github.com/agilesolutions/operator/controller"
 	"github.com/agilesolutions/operator/version"
+	"k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
