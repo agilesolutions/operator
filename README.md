@@ -5,4 +5,6 @@ Using k8s.io/client-go
 
 * go get github.com/agilesolutions/operator
 * cd operator
-* GOOS=linux go build -o ./bin . 
+* set GOARCH=amd64
+* set GOOS=linux
+* go build -o ./bin . 
